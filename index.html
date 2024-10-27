@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Planning Horaire</title>
+    <style>
+        /* Style général */
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #6e8efb, #a777e3);
+            color: #333;
+        }
+        
+        .container {
+            background: #fff;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            width: 300px;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #444;
+            margin-bottom: 20px;
+        }
+
+        /* Style pour l'input et les boutons */
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #6e8efb;
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #fff;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+        }
+        
+        button:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Bouton spécifiques */
+        .start-btn { background: #6e8efb; }
+        .pause-btn { background: #a777e3; }
+        .reset-btn { background: #ff6b6b; }
+
+        /* Style pour le timer */
+        #timer {
+            font-size: 28px;
+            margin: 20px 0;
+            color: #6e8efb;
+            font-weight: bold;
+        }
+
+        /* Style pour la notification */
+        #notification {
+            display: none;
+            color: #28a745;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Planning Horaire</h1>
+        <input type="text" id="task" placeholder="Entrez votre tâche">
+        <button class="start-btn" onclick="startTask()">Démarrer la tâche</button>
+        <button class="pause-btn" onclick="pauseTask()">Pause/Reprise</button>
+        <button class="reset-btn" onclick="resetTask()">Réinitialiser</button>
+        <div id="timer">00:00</div>
+        <div id="notification">Bravo, vous avez terminé !</div>
+    </div>
+
+    <script>
+        let timeLeft = localStorage.getItem('timeLeft') ? parseInt(localStorage.getItem('timeLeft')) : 3600;
+        let isPaused = localStorage.getItem('isPaused') === 'true';
+        let taskName = localStorage.getItem('taskName') || "";
+        let timer;
+
+        function displayTime() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer').textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+
+        function startTask() {
+            const taskInput = document.getElementById('task').value.trim();
+            if (taskInput === "") {
+                alert("Veuillez entrer une tâche pour commencer.");
+                return;
+            }
+
+            taskName = taskInput;
+            localStorage.setItem('taskName', taskName);
+            document.getElementById('notification').style.display = 'none';
+
+            if (!timer) {
+                timer = setInterval(() => {
+                    if (!isPaused && timeLeft > 0) {
+                        timeLeft--;
+                        localStorage.setItem('timeLeft', timeLeft);
+                        displayTime();
+                    } else if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        timer = null;
+                        document.getElementById('notification').style.display = 'block';
+                        alert("Bravo, vous avez terminé !");
+                        localStorage.removeItem('timeLeft');
+                        localStorage.removeItem('taskName');
+                        timeLeft = 3600;
+                        document.getElementById('task').value = "";
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTask() {
+            isPaused = !isPaused;
+            localStorage.setItem('isPaused', isPaused);
+        }
+
+        function resetTask() {
+            clearInterval(timer);
+            timer = null;
+            timeLeft = 3600;
+            isPaused = false;
+            taskName = "";
+            document.getElementById('task').value = "";
+            document.getElementById('notification').style.display = 'none';
+            localStorage.removeItem('timeLeft');
+            localStorage.removeItem('taskName');
+            localStorage.removeItem('isPaused');
+            displayTime();
+        }
+
+        window.onload = function() {
+            if (taskName) {
+                document.getElementById('task').value = taskName;
+            }
+            displayTime();
+        }
+    </script>
+</body>
+</html>
